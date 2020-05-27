@@ -1,5 +1,9 @@
 /* Generic styling */
 
+.credit {
+	font-size: 10px;
+}
+
 button:focus, input:focus {
     outline: none;
 }
@@ -279,6 +283,14 @@ body {
     padding: 0.5rem 0 0 0.25rem;
 }
 
+.fade-enter {
+	opacity: 0;
+}
+
+.fade-enter-active {
+	transition: opacity 0.5s;
+}
+
 
 @media (max-width: 1200px) {
     .container {
@@ -365,4 +377,16 @@ body {
     #product-list-bottom > div {
         display: none;
     }
+}
+
+[v-cloak] > * {
+	display: none;
+}
+
+[v-cloak] > #loading {
+	display: block;
+}
+
+#loading {
+	display: none;
 }

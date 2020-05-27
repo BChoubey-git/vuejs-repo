@@ -1,55 +1,93 @@
-new Vue({
-	el: "#app",
-	data: {
-		total: 0,
-		products: [
-			{ title: "Product 1", id: 1, price: 9.99 },
-			{ title: "Product 2", id: 2, price: 9.99 },
-			{ title: "Product 3", id: 3, price: 9.99 }
-		],
-		cart: [],
-		search: ""
-	},
-	methods: {
-		addToCart: function (product) {
-			var found = false;
-			this.total += product.price;
-			for (var i = 0; i < this.cart.length; i++) {
-				if (this.cart[i].id === product.id) {
-					this.cart[i].qty++;
-					found = true;
+var LOAD_NUM = 4;
+var watcher;
+
+setTimeout(function () {	// setTime out has been out to test v-cloak
+	new Vue({
+		el: "#app",
+		data: {
+			total: 0,
+			products: [],
+			cart: [],
+			search: "cat",
+			lastSearch: "",
+			loading: false,
+			results: []
+		},
+		methods: {
+			addToCart: function (product) {
+				var found = false;
+				this.total += product.price;
+				for (var i = 0; i < this.cart.length; i++) {
+					if (this.cart[i].id === product.id) {
+						this.cart[i].qty++;
+						found = true;
+					}
+				}
+				if (!found) {
+					this.cart.push(
+						{
+							title: product.title,
+							id: product.id,
+							price: product.price,
+							qty: 1
+						}
+					);
+				}
+			},
+			inc: function (item) {
+				item.qty++;
+				this.total += item.price;
+			},
+			dec: function (item) {
+				item.qty--;
+				this.total -= item.price;
+				if (item.qty <= 0) {
+					var i = this.cart.indexOf(item);
+					this.cart.splice(i, 1);
+				}
+			},
+			onSubmit: function () {
+				this.products = [];
+				this.results = [];
+				this.loading = true;
+				var path = "/search?q=".concat(this.search);
+				this.$http.get(path).then(function (response) {
+					this.results = response.body;
+					this.lastSearch = this.search;
+					this.appendReslts();
+					this.loading = false;
+				});
+			},
+			appendReslts: function () {
+				console.log('pppppppppp');
+				if (this.products.length < this.results.length) {
+					console.log('qqqqqqq');
+					var toAppend = this.results.slice(
+						this.products.length,
+						LOAD_NUM + this.products.length
+					);
+					this.products = this.products.concat(toAppend);
 				}
 			}
-			if (!found) {
-				this.cart.push(
-					{
-						title: product.title,
-						id: product.id,
-						price: product.price,
-						qty: 1
-					}
-				);
+		},
+		filters: {
+			currency: function (price) {
+				return "$".concat(price.toFixed(2));
 			}
 		},
-		inc: function (item) {
-			item.qty++;
-			this.total += item.price;
+		created: function () {
+			this.onSubmit();
 		},
-		dec: function (item) {
-			item.qty--;
-			this.total -= item.price;
-			if (item.qty <= 0) {
-				var i = this.cart.indexOf(item);
-				this.cart.splice(i, 1);
+		updated: function () {
+			var sensor = document.querySelector("#product-list-bottom");
+			watcher = scrollMonitor.create(sensor);
+			watcher.enterViewport(this.appendReslts);
+		},
+		beforeUpdate: function () {
+			if (watcher) {
+				watcher.destroy();
+				watcher = null;
 			}
-		},
-		onSubmit: function () {
-			console.log('pppppp');
 		}
-	},
-	filters: {
-		currency: function (price) {
-			return "$".concat(price.toFixed(2));
-		}
-	}
-})
+	});
+}, 3000);
